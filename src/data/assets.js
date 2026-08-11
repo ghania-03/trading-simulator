@@ -1,0 +1,58 @@
+export const assets = [
+  {
+    id: "btc",
+    symbol: "BTC",
+    name: "Bitcoin",
+    price: 65000,
+    volatility: 130,
+  },
+  {
+    id: "eth",
+    symbol: "ETH",
+    name: "Ethereum",
+    price: 3200,
+    volatility: 6.4,
+  },
+  {
+    id: "sol",
+    symbol: "SOL",
+    name: "Solana",
+    price: 180,
+    volatility: 0.36,
+  },
+  {
+    id: "bnb",
+    symbol: "BNB",
+    name: "BNB",
+    price: 600,
+    volatility: 1.2,
+  },
+  {
+    id: "xrp",
+    symbol: "XRP",
+    name: "XRP",
+    price: 0.6,
+    volatility: 0.002,
+  },
+  {
+    id: "ada",
+    symbol: "ADA",
+    name: "Cardano",
+    price: 0.4,
+    volatility: 0.002,
+  },
+  {
+    id: "doge",
+    symbol: "DOGE",
+    name: "Dogecoin",
+    price: 0.12,
+    volatility: 0.001,
+  },
+  {
+    id: "avax",
+    symbol: "AVAX",
+    name: "Avalanche",
+    price: 25,
+    volatility: 0.05,
+  },
+];
