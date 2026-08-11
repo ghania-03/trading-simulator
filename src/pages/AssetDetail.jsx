@@ -9,7 +9,6 @@ function AssetDetail() {
   const asset = assets.find((asset) => asset.id === id);
 
   const { prices } = usePriceFeed();
-  const priceData = prices[asset.id];
 
   const priceData = prices[asset.id];
 
