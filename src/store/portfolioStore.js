@@ -63,6 +63,45 @@ const usePortfolioStore = create((set) => ({
     set((state) => ({
       transactions: [...state.transactions, transaction],
     })),
+
+  buy: (assetId, quantity, price) =>
+    set((state) => {
+      const totalCost = quantity * price;
+
+      if (quantity <= 0) {
+        return state;
+      }
+
+      if (totalCost > state.cash) {
+        return state;
+      }
+
+      const existingHolding = state.holdings[assetId];
+
+      return {
+        cash: state.cash - totalCost,
+
+        holdings: {
+          ...state.holdings,
+          [assetId]: {
+            quantity: (existingHolding?.quantity || 0) + quantity,
+          },
+        },
+
+        transactions: [
+          ...state.transactions,
+          {
+            id: Date.now(),
+            type: "BUY",
+            assetId,
+            quantity,
+            price,
+            total: totalCost,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      };
+    }),
     
 }));
 

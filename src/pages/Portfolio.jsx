@@ -23,6 +23,16 @@ function Portfolio() {
   const profitLoss = portfolioValue - startingCapital;
 
   const profitLossPercentage = (profitLoss / startingCapital) * 100;
+
+  const transactions = usePortfolioStore((state) => state.transactions);
+
+  const buy = usePortfolioStore((state) => state.buy);
+  function handleTestBuy() {
+    const price = prices.btc.current;
+
+    buy("btc", 0.1, price);
+  }
+
   return (
     <div>
       <h1>Portfolio</h1>
@@ -47,11 +57,17 @@ function Portfolio() {
         <strong>
           {profitLoss >= 0 ? "+" : ""}${profitLoss.toFixed(2)}
         </strong>
-
         <span> ({profitLossPercentage.toFixed(2)}%)</span>
       </div>
-    </div>
 
+      <div>
+        <button onClick={handleTestBuy}>Test Buy 0.1 BTC</button>
+        <p>BTC: {holdings.btc?.quantity ?? 0}</p>
+      </div>
+
+      <pre>{JSON.stringify(transactions, null, 2)}</pre>
+      
+    </div>
   );
 }
 
