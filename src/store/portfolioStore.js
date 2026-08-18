@@ -102,7 +102,50 @@ const usePortfolioStore = create((set) => ({
         ],
       };
     }),
-    
+   sell: (assetId, quantity, price) =>
+  set((state) => {
+    const existingHolding = state.holdings[assetId];
+
+    if (!existingHolding || quantity <= 0) {
+      return state;
+    }
+
+    if (quantity > existingHolding.quantity) {
+      return state;
+    }
+
+    const totalValue = quantity * price;
+    const newQuantity = existingHolding.quantity - quantity;
+
+    const updatedHoldings = { ...state.holdings };
+
+    if (newQuantity <= 0) {
+      delete updatedHoldings[assetId];
+    } else {
+      updatedHoldings[assetId] = {
+        quantity: newQuantity,
+      };
+    }
+
+    return {
+      cash: state.cash + totalValue,
+
+      holdings: updatedHoldings,
+
+      transactions: [
+        ...state.transactions,
+        {
+          id: Date.now(),
+          type: "SELL",
+          assetId,
+          quantity,
+          price,
+          total: totalValue,
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    };
+  }), 
 }));
 
 export default usePortfolioStore;
