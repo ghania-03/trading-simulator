@@ -4,6 +4,7 @@ const usePortfolioStore = create((set) => ({
   cash: 10000,
   holdings: {},
   transactions: [],
+  error: null,
 
   deposit: (amount) =>
     set((state) => ({
@@ -37,8 +38,7 @@ const usePortfolioStore = create((set) => ({
         return {};
       }
 
-      const newQuantity = existingHolding.quantity - quantity;
-
+      const newQuantity = Math.max(0, existingHolding.quantity - quantity);
       if (newQuantity <= 0) {
         const updatedHoldings = { ...state.holdings };
 
@@ -66,14 +66,18 @@ const usePortfolioStore = create((set) => ({
 
   buy: (assetId, quantity, price) =>
     set((state) => {
-      const totalCost = quantity * price;
-
       if (quantity <= 0) {
-        return state;
+        return { error: "Quantity must be greater than 0" };
       }
 
+      if (price <= 0) {
+        return { error: "Invalid price" };
+      }
+
+      const totalCost = quantity * price;
+
       if (totalCost > state.cash) {
-        return state;
+        return { error: "Insufficient cash" };
       }
 
       const existingHolding = state.holdings[assetId];
@@ -100,52 +104,66 @@ const usePortfolioStore = create((set) => ({
             timestamp: new Date().toISOString(),
           },
         ],
+
+        error: null,
       };
     }),
-   sell: (assetId, quantity, price) =>
-  set((state) => {
-    const existingHolding = state.holdings[assetId];
 
-    if (!existingHolding || quantity <= 0) {
-      return state;
-    }
+  sell: (assetId, quantity, price) =>
+    set((state) => {
+      if (quantity <= 0) {
+        return { error: "Quantity must be greater than 0" };
+      }
 
-    if (quantity > existingHolding.quantity) {
-      return state;
-    }
+      if (price <= 0) {
+        return { error: "Invalid price" };
+      }
 
-    const totalValue = quantity * price;
-    const newQuantity = existingHolding.quantity - quantity;
+      const existingHolding = state.holdings[assetId];
 
-    const updatedHoldings = { ...state.holdings };
+      if (!existingHolding) {
+        return { error: "Insufficient holdings" };
+      }
 
-    if (newQuantity <= 0) {
-      delete updatedHoldings[assetId];
-    } else {
-      updatedHoldings[assetId] = {
-        quantity: newQuantity,
+      if (quantity > existingHolding.quantity) {
+        return { error: "Insufficient holdings" };
+      }
+
+      const totalValue = quantity * price;
+
+      const newQuantity = Math.max(0, existingHolding.quantity - quantity);
+
+      const updatedHoldings = { ...state.holdings };
+
+      if (newQuantity === 0) {
+        delete updatedHoldings[assetId];
+      } else {
+        updatedHoldings[assetId] = {
+          quantity: newQuantity,
+        };
+      }
+
+      return {
+        cash: state.cash + totalValue,
+
+        holdings: updatedHoldings,
+
+        transactions: [
+          ...state.transactions,
+          {
+            id: Date.now(),
+            type: "SELL",
+            assetId,
+            quantity,
+            price,
+            total: totalValue,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+
+        error: null,
       };
-    }
-
-    return {
-      cash: state.cash + totalValue,
-
-      holdings: updatedHoldings,
-
-      transactions: [
-        ...state.transactions,
-        {
-          id: Date.now(),
-          type: "SELL",
-          assetId,
-          quantity,
-          price,
-          total: totalValue,
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    };
-  }), 
+    }),
 }));
 
 export default usePortfolioStore;
