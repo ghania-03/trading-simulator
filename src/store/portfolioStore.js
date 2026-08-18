@@ -58,11 +58,12 @@ const usePortfolioStore = create((set) => ({
         },
       };
     }),
-    
+
   addTransaction: (transaction) =>
     set((state) => ({
       transactions: [...state.transactions, transaction],
     })),
+    
 }));
 
 export default usePortfolioStore;

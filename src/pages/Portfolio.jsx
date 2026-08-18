@@ -1,5 +1,6 @@
 import usePortfolioStore from "../store/portfolioStore";
 import usePriceFeed from "../hooks/usePriceFeed";
+
 function Portfolio() {
   const { prices } = usePriceFeed();
 
@@ -50,6 +51,7 @@ function Portfolio() {
         <span> ({profitLossPercentage.toFixed(2)}%)</span>
       </div>
     </div>
+
   );
 }
 
