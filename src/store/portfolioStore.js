@@ -6,6 +6,11 @@ const usePortfolioStore = create((set) => ({
   transactions: [],
   error: null,
 
+  clearError: () =>
+    set({
+      error: null,
+    }),
+
   deposit: (amount) =>
     set((state) => ({
       cash: state.cash + amount,
@@ -16,71 +21,63 @@ const usePortfolioStore = create((set) => ({
       cash: state.cash - amount,
     })),
 
-  addHolding: (assetId, quantity) =>
+  buy: (assetId, quantity, price) => {
+    let result;
+
     set((state) => {
-      const existingHolding = state.holdings[assetId];
-
-      return {
-        holdings: {
-          ...state.holdings,
-          [assetId]: {
-            quantity: (existingHolding?.quantity || 0) + quantity,
-          },
-        },
-      };
-    }),
-
-  removeHolding: (assetId, quantity) =>
-    set((state) => {
-      const existingHolding = state.holdings[assetId];
-
-      if (!existingHolding) {
-        return {};
-      }
-
-      const newQuantity = Math.max(0, existingHolding.quantity - quantity);
-      if (newQuantity <= 0) {
-        const updatedHoldings = { ...state.holdings };
-
-        delete updatedHoldings[assetId];
+      if (quantity <= 0) {
+        result = {
+          success: false,
+          error: "Quantity must be greater than 0",
+        };
 
         return {
-          holdings: updatedHoldings,
+          error: result.error,
         };
       }
 
-      return {
-        holdings: {
-          ...state.holdings,
-          [assetId]: {
-            quantity: newQuantity,
-          },
-        },
-      };
-    }),
-
-  addTransaction: (transaction) =>
-    set((state) => ({
-      transactions: [...state.transactions, transaction],
-    })),
-
-  buy: (assetId, quantity, price) =>
-    set((state) => {
-      if (quantity <= 0) {
-        return { error: "Quantity must be greater than 0" };
-      }
-
       if (price <= 0) {
-        return { error: "Invalid price" };
+        result = {
+          success: false,
+          error: "Invalid price",
+        };
+
+        return {
+          error: result.error,
+        };
       }
 
       const totalCost = quantity * price;
 
       if (totalCost > state.cash) {
-        return { error: "Insufficient cash" };
+        result = {
+          success: false,
+          error: "Insufficient cash",
+        };
+
+        return {
+          error: result.error,
+        };
       }
 
       const existingHolding = state.holdings[assetId];
+
+      const newQuantity =
+        (existingHolding?.quantity || 0) + quantity;
+
+      const transaction = {
+        id: Date.now(),
+        type: "BUY",
+        assetId,
+        quantity,
+        price,
+        total: totalCost,
+        timestamp: new Date().toISOString(),
+      };
+
+      result = {
+        success: true,
+      };
 
       return {
         cash: state.cash - totalCost,
@@ -88,60 +85,102 @@ const usePortfolioStore = create((set) => ({
         holdings: {
           ...state.holdings,
           [assetId]: {
-            quantity: (existingHolding?.quantity || 0) + quantity,
+            quantity: newQuantity,
           },
         },
 
         transactions: [
           ...state.transactions,
-          {
-            id: Date.now(),
-            type: "BUY",
-            assetId,
-            quantity,
-            price,
-            total: totalCost,
-            timestamp: new Date().toISOString(),
-          },
+          transaction,
         ],
 
         error: null,
       };
-    }),
+    });
 
-  sell: (assetId, quantity, price) =>
+    return result;
+  },
+
+  sell: (assetId, quantity, price) => {
+    let result;
+
     set((state) => {
       if (quantity <= 0) {
-        return { error: "Quantity must be greater than 0" };
+        result = {
+          success: false,
+          error: "Quantity must be greater than 0",
+        };
+
+        return {
+          error: result.error,
+        };
       }
 
       if (price <= 0) {
-        return { error: "Invalid price" };
+        result = {
+          success: false,
+          error: "Invalid price",
+        };
+
+        return {
+          error: result.error,
+        };
       }
 
       const existingHolding = state.holdings[assetId];
 
       if (!existingHolding) {
-        return { error: "Insufficient holdings" };
+        result = {
+          success: false,
+          error: "Insufficient holdings",
+        };
+
+        return {
+          error: result.error,
+        };
       }
 
       if (quantity > existingHolding.quantity) {
-        return { error: "Insufficient holdings" };
+        result = {
+          success: false,
+          error: "Insufficient holdings",
+        };
+
+        return {
+          error: result.error,
+        };
       }
 
       const totalValue = quantity * price;
 
-      const newQuantity = Math.max(0, existingHolding.quantity - quantity);
+      const newQuantity =
+        existingHolding.quantity - quantity;
 
-      const updatedHoldings = { ...state.holdings };
+      const updatedHoldings = {
+        ...state.holdings,
+      };
 
-      if (newQuantity === 0) {
+      if (newQuantity <= 0) {
         delete updatedHoldings[assetId];
       } else {
         updatedHoldings[assetId] = {
           quantity: newQuantity,
         };
       }
+
+      const transaction = {
+        id: Date.now(),
+        type: "SELL",
+        assetId,
+        quantity,
+        price,
+        total: totalValue,
+        timestamp: new Date().toISOString(),
+      };
+
+      result = {
+        success: true,
+      };
 
       return {
         cash: state.cash + totalValue,
@@ -150,20 +189,15 @@ const usePortfolioStore = create((set) => ({
 
         transactions: [
           ...state.transactions,
-          {
-            id: Date.now(),
-            type: "SELL",
-            assetId,
-            quantity,
-            price,
-            total: totalValue,
-            timestamp: new Date().toISOString(),
-          },
+          transaction,
         ],
 
         error: null,
       };
-    }),
+    });
+
+    return result;
+  },
 }));
 
 export default usePortfolioStore;
