@@ -8,6 +8,7 @@ import usePriceFeed from "../hooks/usePriceFeed";
 import usePortfolioStore from "../store/portfolioStore";
 import { getPriceChange } from "../utils/priceChange";
 import { roundQuantity } from "../utils/portfolioCalculations";
+import PriceChart from "../components/PriceChart";
 
 function AssetDetail() {
   const { id } = useParams();
@@ -166,93 +167,66 @@ function AssetDetail() {
       <section>
         <h2>Market</h2>
 
-        <p>
-          Current Price: $
-          {currentPrice.toFixed(2)}
-        </p>
+        <p>Current Price: ${currentPrice.toFixed(2)}</p>
 
         <p>
-          Change:{" "}
-          {change >= 0 ? "+" : ""}
+          Change: {change >= 0 ? "+" : ""}
           {change.toFixed(2)}
         </p>
 
         <p>
-          Percentage:{" "}
-          {percentage >= 0
-            ? "+"
-            : ""}
+          Percentage: {percentage >= 0 ? "+" : ""}
           {percentage.toFixed(3)}%
         </p>
 
-        <p>
-          Direction: {direction}
-        </p>
+        <p>Direction: {direction}</p>
       </section>
+      <hr />
+
+      <PriceChart history={priceData.history} />
 
       <hr />
 
       <section>
         <h2>Portfolio</h2>
 
-        <p>
-          Available Cash: $
-          {cash.toFixed(2)}
-        </p>
+        <p>Available Cash: ${cash.toFixed(2)}</p>
 
         <p>
-          Available Quantity:{" "}
-          {currentQuantity}{" "}
-          {asset.symbol}
+          Available Quantity: {currentQuantity} {asset.symbol}
         </p>
 
-        <p>
-          Holding Value: $
-          {holdingValue.toFixed(2)}
-        </p>
+        <p>Holding Value: ${holdingValue.toFixed(2)}</p>
       </section>
 
       <hr />
 
       <section>
-        <h2>
-          Trade {asset.symbol}
-        </h2>
+        <h2>Trade {asset.symbol}</h2>
 
         <label>
           Quantity:
-
           <input
             type="number"
             min="0"
             step="any"
             value={quantity}
-            onChange={
-              handleQuantityChange
-            }
+            onChange={handleQuantityChange}
             placeholder="Enter quantity"
           />
         </label>
 
-        <button
-          type="button"
-          onClick={handleMax}
-        >
+        <button type="button" onClick={handleMax}>
           MAX
         </button>
 
-        <p>
-          Estimated Total: $
-          {estimatedTotal.toFixed(2)}
-        </p>
+        <p>Estimated Total: ${estimatedTotal.toFixed(2)}</p>
 
         <div>
           <button
             type="button"
             onClick={handleBuy}
-            disabled={
-              submittingRef.current
-            }
+            disabled={submittingRef.current}
           >
             BUY
           </button>
@@ -260,9 +234,7 @@ function AssetDetail() {
           <button
             type="button"
             onClick={handleSell}
-            disabled={
-              submittingRef.current
-            }
+            disabled={submittingRef.current}
           >
             SELL
           </button>
@@ -283,31 +255,15 @@ function AssetDetail() {
         <div>
           <h3>Order Summary</h3>
 
-          <p>
-            Side:{" "}
-            {currentQuantity > 0
-              ? "BUY / SELL"
-              : "BUY"}
-          </p>
+          <p>Side: {currentQuantity > 0 ? "BUY / SELL" : "BUY"}</p>
 
-          <p>
-            Asset: {asset.symbol}
-          </p>
+          <p>Asset: {asset.symbol}</p>
 
-          <p>
-            Quantity:{" "}
-            {numericQuantity}
-          </p>
+          <p>Quantity: {numericQuantity}</p>
 
-          <p>
-            Price: $
-            {currentPrice.toFixed(2)}
-          </p>
+          <p>Price: ${currentPrice.toFixed(2)}</p>
 
-          <p>
-            Estimated Value: $
-            {estimatedTotal.toFixed(2)}
-          </p>
+          <p>Estimated Value: ${estimatedTotal.toFixed(2)}</p>
         </div>
       </section>
     </div>
