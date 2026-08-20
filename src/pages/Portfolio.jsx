@@ -1,5 +1,6 @@
 import usePortfolioStore from "../store/portfolioStore";
 import usePriceFeed from "../hooks/usePriceFeed";
+import TransactionHistory from "../components/TransactionHistory";
 
 function Portfolio() {
   const { prices } = usePriceFeed();
@@ -24,21 +25,6 @@ function Portfolio() {
 
   const profitLossPercentage = (profitLoss / startingCapital) * 100;
 
-  const transactions = usePortfolioStore((state) => state.transactions);
-
-  const buy = usePortfolioStore((state) => state.buy);
-  function handleTestBuy() {
-    const price = prices.btc.current;
-
-    buy("btc", 0.1, price);
-  }
-
-  const sell = usePortfolioStore((state) => state.sell);
-  function handleTestSell() {
-  const price = prices.btc.current;
-
-  sell("btc", 0.05, price);
-}
   return (
     <div>
       <h1>Portfolio</h1>
@@ -66,13 +52,7 @@ function Portfolio() {
         <span> ({profitLossPercentage.toFixed(2)}%)</span>
       </div>
 
-      <div>
-        <button onClick={handleTestBuy}>Test Buy 0.1 BTC</button>
-        <button onClick={handleTestSell}>Test Sell 0.05 BTC</button>
-        <p>BTC: {holdings.btc?.quantity ?? 0}</p>
-      </div>
-
-      <pre>{JSON.stringify(transactions, null, 2)}</pre>
+      <TransactionHistory />
     </div>
   );
 }

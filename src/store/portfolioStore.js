@@ -11,16 +11,6 @@ const usePortfolioStore = create((set) => ({
       error: null,
     }),
 
-  deposit: (amount) =>
-    set((state) => ({
-      cash: state.cash + amount,
-    })),
-
-  withdraw: (amount) =>
-    set((state) => ({
-      cash: state.cash - amount,
-    })),
-
   buy: (assetId, quantity, price) => {
     let result;
 
