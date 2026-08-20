@@ -1,5 +1,11 @@
 import { create } from "zustand";
 
+const QUANTITY_DECIMALS = 8;
+
+const roundQuantity = (quantity) => {
+  return Number(quantity.toFixed(QUANTITY_DECIMALS));
+};
+
 const usePortfolioStore = create((set) => ({
   cash: 10000,
   holdings: {},
@@ -52,8 +58,21 @@ const usePortfolioStore = create((set) => ({
 
       const existingHolding = state.holdings[assetId];
 
-      const newQuantity =
-        (existingHolding?.quantity || 0) + quantity;
+      const oldQuantity = existingHolding?.quantity || 0;
+      const oldAverageBuyPrice =
+        existingHolding?.averageBuyPrice || 0;
+
+      const newQuantity = roundQuantity(
+        oldQuantity + quantity,
+      );
+
+      const newAverageBuyPrice =
+        oldQuantity === 0
+          ? price
+          : (
+              oldQuantity * oldAverageBuyPrice +
+              quantity * price
+            ) / newQuantity;
 
       const transaction = {
         id: Date.now(),
@@ -76,6 +95,7 @@ const usePortfolioStore = create((set) => ({
           ...state.holdings,
           [assetId]: {
             quantity: newQuantity,
+            averageBuyPrice: newAverageBuyPrice,
           },
         },
 
@@ -143,8 +163,9 @@ const usePortfolioStore = create((set) => ({
 
       const totalValue = quantity * price;
 
-      const newQuantity =
-        existingHolding.quantity - quantity;
+      const newQuantity = roundQuantity(
+        existingHolding.quantity - quantity,
+      );
 
       const updatedHoldings = {
         ...state.holdings,
@@ -155,6 +176,8 @@ const usePortfolioStore = create((set) => ({
       } else {
         updatedHoldings[assetId] = {
           quantity: newQuantity,
+          averageBuyPrice:
+            existingHolding.averageBuyPrice,
         };
       }
 
