@@ -1,9 +1,10 @@
 import usePortfolioStore from "../store/portfolioStore";
 
 function TransactionHistory() {
-  const transactions = usePortfolioStore(
-    (state) => state.transactions
-  );
+  const transactions =
+    usePortfolioStore(
+      (state) => state.transactions,
+    );
 
   return (
     <section>
@@ -13,38 +14,50 @@ function TransactionHistory() {
         <p>No transactions yet.</p>
       ) : (
         <div>
-          {transactions.map((transaction) => (
-            <div key={transaction.id}>
-              <p>
-                <strong>{transaction.type}</strong>
-              </p>
+          {[...transactions]
+            .reverse()
+            .map((transaction) => (
+              <div key={transaction.id}>
+                <hr />
 
-              <p>
-                Asset: {transaction.assetId.toUpperCase()}
-              </p>
+                <p>
+                  <strong>
+                    {transaction.type}
+                  </strong>
+                </p>
 
-              <p>
-                Quantity: {transaction.quantity}
-              </p>
+                <p>
+                  Asset:{" "}
+                  {transaction.assetId.toUpperCase()}
+                </p>
 
-              <p>
-                Price: ${transaction.price.toFixed(2)}
-              </p>
+                <p>
+                  Quantity:{" "}
+                  {transaction.quantity}
+                </p>
 
-              <p>
-                Total: ${transaction.total.toFixed(2)}
-              </p>
+                <p>
+                  Price: $
+                  {transaction.price.toFixed(
+                    2,
+                  )}
+                </p>
 
-              <p>
-                Time:{" "}
-                {new Date(
-                  transaction.timestamp
-                ).toLocaleString()}
-              </p>
+                <p>
+                  Total: $
+                  {transaction.total.toFixed(
+                    2,
+                  )}
+                </p>
 
-              <hr />
-            </div>
-          ))}
+                <p>
+                  Time:{" "}
+                  {new Date(
+                    transaction.timestamp,
+                  ).toLocaleString()}
+                </p>
+              </div>
+            ))}
         </div>
       )}
     </section>

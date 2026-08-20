@@ -1,28 +1,52 @@
-import { useState } from "react";
+import {
+  useRef,
+  useState,
+} from "react";
 import { useParams } from "react-router-dom";
 import { assets } from "../data/assets";
 import usePriceFeed from "../hooks/usePriceFeed";
 import usePortfolioStore from "../store/portfolioStore";
 import { getPriceChange } from "../utils/priceChange";
+import { roundQuantity } from "../utils/portfolioCalculations";
 
 function AssetDetail() {
   const { id } = useParams();
 
-  const asset = assets.find((asset) => asset.id === id);
+  const asset = assets.find(
+    (item) => item.id === id,
+  );
 
   const { prices } = usePriceFeed();
 
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] =
+    useState("");
 
-  // Subscribe to portfolio state
-  const cash = usePortfolioStore((state) => state.cash);
-  const holdings = usePortfolioStore((state) => state.holdings);
+  const submittingRef = useRef(false);
 
-  // Subscribe to portfolio actions/state
-  const buy = usePortfolioStore((state) => state.buy);
-  const sell = usePortfolioStore((state) => state.sell);
-  const error = usePortfolioStore((state) => state.error);
-  const clearError = usePortfolioStore((state) => state.clearError);
+  const cash = usePortfolioStore(
+    (state) => state.cash,
+  );
+
+  const holdings = usePortfolioStore(
+    (state) => state.holdings,
+  );
+
+  const buy = usePortfolioStore(
+    (state) => state.buy,
+  );
+
+  const sell = usePortfolioStore(
+    (state) => state.sell,
+  );
+
+  const error = usePortfolioStore(
+    (state) => state.error,
+  );
+
+  const clearError =
+    usePortfolioStore(
+      (state) => state.clearError,
+    );
 
   if (!asset) {
     return <h1>Asset Not Found</h1>;
@@ -34,23 +58,40 @@ function AssetDetail() {
     return <p>Loading price...</p>;
   }
 
-  const { change, percentage, direction } = getPriceChange(
+  const {
+    change,
+    percentage,
+    direction,
+  } = getPriceChange(
     priceData.current,
-    priceData.previous
+    priceData.previous,
   );
 
   const currentQuantity =
     holdings[asset.id]?.quantity || 0;
 
-  const numericQuantity = Number(quantity) || 0;
+  const currentPrice =
+    priceData.current;
+
+  const numericQuantity =
+    Number(quantity) || 0;
 
   const estimatedTotal =
-    numericQuantity * priceData.current;
+    numericQuantity * currentPrice;
 
   const holdingValue =
-    currentQuantity * priceData.current;
+    currentQuantity * currentPrice;
 
-  function handleQuantityChange(event) {
+  const maxBuyQuantity =
+    currentPrice > 0
+      ? roundQuantity(
+          cash / currentPrice,
+        )
+      : 0;
+
+  function handleQuantityChange(
+    event,
+  ) {
     setQuantity(event.target.value);
 
     if (error) {
@@ -58,27 +99,59 @@ function AssetDetail() {
     }
   }
 
-  function handleBuy() {
-    const result = buy(
-      asset.id,
-      numericQuantity,
-      priceData.current
-    );
+  function handleMax() {
+    clearError();
 
-    if (result.success) {
-      setQuantity("");
+    setQuantity(
+      String(
+        currentQuantity > 0
+          ? currentQuantity
+          : maxBuyQuantity,
+      ),
+    );
+  }
+
+  function handleBuy() {
+    if (submittingRef.current) {
+      return;
+    }
+
+    submittingRef.current = true;
+
+    try {
+      const result = buy(
+        asset.id,
+        numericQuantity,
+        currentPrice,
+      );
+
+      if (result?.success) {
+        setQuantity("");
+      }
+    } finally {
+      submittingRef.current = false;
     }
   }
 
   function handleSell() {
-    const result = sell(
-      asset.id,
-      numericQuantity,
-      priceData.current
-    );
+    if (submittingRef.current) {
+      return;
+    }
 
-    if (result.success) {
-      setQuantity("");
+    submittingRef.current = true;
+
+    try {
+      const result = sell(
+        asset.id,
+        numericQuantity,
+        currentPrice,
+      );
+
+      if (result?.success) {
+        setQuantity("");
+      }
+    } finally {
+      submittingRef.current = false;
     }
   }
 
@@ -90,88 +163,153 @@ function AssetDetail() {
 
       <hr />
 
-      <h2>Market</h2>
+      <section>
+        <h2>Market</h2>
 
-      <p>
-        Current Price: $
-        {priceData.current.toFixed(2)}
-      </p>
-
-      <p>
-        Change:{" "}
-        {change >= 0 ? "+" : ""}
-        {change.toFixed(2)}
-      </p>
-
-      <p>
-        Percentage:{" "}
-        {percentage >= 0 ? "+" : ""}
-        {percentage.toFixed(3)}%
-      </p>
-
-      <p>
-        Direction: {direction}
-      </p>
-
-      <hr />
-
-      <h2>Portfolio</h2>
-
-      <p>
-        Available Cash: $
-        {cash.toFixed(2)}
-      </p>
-
-      <p>
-        {asset.symbol} Holding:{" "}
-        {currentQuantity} {asset.symbol}
-      </p>
-
-      <p>
-        Holding Value: $
-        {holdingValue.toFixed(2)}
-      </p>
-
-      <hr />
-
-      <h2>Trade {asset.symbol}</h2>
-
-      <label>
-        Quantity:
-        <input
-          type="number"
-          min="0"
-          step="any"
-          value={quantity}
-          onChange={handleQuantityChange}
-          placeholder="Enter quantity"
-        />
-      </label>
-
-      <p>
-        Estimated Total: $
-        {estimatedTotal.toFixed(2)}
-      </p>
-
-      <button
-        onClick={handleBuy}
-        disabled={numericQuantity <= 0}
-      >
-        BUY
-      </button>
-
-      <button
-        onClick={handleSell}
-        disabled={numericQuantity <= 0}
-      >
-        SELL
-      </button>
-
-      {error && (
         <p>
-          {error}
+          Current Price: $
+          {currentPrice.toFixed(2)}
         </p>
-      )}
+
+        <p>
+          Change:{" "}
+          {change >= 0 ? "+" : ""}
+          {change.toFixed(2)}
+        </p>
+
+        <p>
+          Percentage:{" "}
+          {percentage >= 0
+            ? "+"
+            : ""}
+          {percentage.toFixed(3)}%
+        </p>
+
+        <p>
+          Direction: {direction}
+        </p>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>Portfolio</h2>
+
+        <p>
+          Available Cash: $
+          {cash.toFixed(2)}
+        </p>
+
+        <p>
+          Available Quantity:{" "}
+          {currentQuantity}{" "}
+          {asset.symbol}
+        </p>
+
+        <p>
+          Holding Value: $
+          {holdingValue.toFixed(2)}
+        </p>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2>
+          Trade {asset.symbol}
+        </h2>
+
+        <label>
+          Quantity:
+
+          <input
+            type="number"
+            min="0"
+            step="any"
+            value={quantity}
+            onChange={
+              handleQuantityChange
+            }
+            placeholder="Enter quantity"
+          />
+        </label>
+
+        <button
+          type="button"
+          onClick={handleMax}
+        >
+          MAX
+        </button>
+
+        <p>
+          Estimated Total: $
+          {estimatedTotal.toFixed(2)}
+        </p>
+
+        <div>
+          <button
+            type="button"
+            onClick={handleBuy}
+            disabled={
+              submittingRef.current
+            }
+          >
+            BUY
+          </button>
+
+          <button
+            type="button"
+            onClick={handleSell}
+            disabled={
+              submittingRef.current
+            }
+          >
+            SELL
+          </button>
+        </div>
+
+        {error && (
+          <p
+            role="alert"
+            style={{
+              color: "red",
+              marginTop: "10px",
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <div>
+          <h3>Order Summary</h3>
+
+          <p>
+            Side:{" "}
+            {currentQuantity > 0
+              ? "BUY / SELL"
+              : "BUY"}
+          </p>
+
+          <p>
+            Asset: {asset.symbol}
+          </p>
+
+          <p>
+            Quantity:{" "}
+            {numericQuantity}
+          </p>
+
+          <p>
+            Price: $
+            {currentPrice.toFixed(2)}
+          </p>
+
+          <p>
+            Estimated Value: $
+            {estimatedTotal.toFixed(2)}
+          </p>
+        </div>
+      </section>
     </div>
   );
 }
