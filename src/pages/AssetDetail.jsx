@@ -3,7 +3,7 @@ import {
   useState,
 } from "react";
 import { useParams } from "react-router-dom";
-import { assets } from "../data/assets";
+import { useAsset } from "../hooks/useAssets";
 import usePriceFeed from "../hooks/usePriceFeed";
 import usePortfolioStore from "../store/portfolioStore";
 import { getPriceChange } from "../utils/priceChange";
@@ -13,9 +13,13 @@ import PriceChart from "../components/PriceChart";
 function AssetDetail() {
   const { id } = useParams();
 
-  const asset = assets.find(
-    (item) => item.id === id,
-  );
+  const {
+    data: asset,
+    isLoading,
+    isError,
+    error: assetError,
+    refetch,
+  } = useAsset(id);
 
   const { prices } = usePriceFeed();
 
@@ -48,6 +52,34 @@ function AssetDetail() {
     usePortfolioStore(
       (state) => state.clearError,
     );
+
+  if (isLoading) {
+    return <p>Loading asset...</p>;
+  }
+
+  if (isError) {
+    return (
+      <section>
+        <h1>Asset</h1>
+
+        <p role="alert">
+          Failed to load asset.
+        </p>
+
+        <p>
+          {assetError?.message ||
+            "Something went wrong."}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => refetch()}
+        >
+          Try Again
+        </button>
+      </section>
+    );
+  }
 
   if (!asset) {
     return <h1>Asset Not Found</h1>;
@@ -167,66 +199,97 @@ function AssetDetail() {
       <section>
         <h2>Market</h2>
 
-        <p>Current Price: ${currentPrice.toFixed(2)}</p>
+        <p>
+          Current Price: $
+          {currentPrice.toFixed(2)}
+        </p>
 
         <p>
-          Change: {change >= 0 ? "+" : ""}
+          Change:{" "}
+          {change >= 0 ? "+" : ""}
           {change.toFixed(2)}
         </p>
 
         <p>
-          Percentage: {percentage >= 0 ? "+" : ""}
+          Percentage:{" "}
+          {percentage >= 0 ? "+" : ""}
           {percentage.toFixed(3)}%
         </p>
 
-        <p>Direction: {direction}</p>
+        <p>
+          Direction: {direction}
+        </p>
       </section>
+
       <hr />
 
-      <PriceChart history={priceData.history} />
+      <PriceChart
+        history={priceData.history}
+      />
 
       <hr />
 
       <section>
         <h2>Portfolio</h2>
 
-        <p>Available Cash: ${cash.toFixed(2)}</p>
-
         <p>
-          Available Quantity: {currentQuantity} {asset.symbol}
+          Available Cash: $
+          {cash.toFixed(2)}
         </p>
 
-        <p>Holding Value: ${holdingValue.toFixed(2)}</p>
+        <p>
+          Available Quantity:{" "}
+          {currentQuantity}{" "}
+          {asset.symbol}
+        </p>
+
+        <p>
+          Holding Value: $
+          {holdingValue.toFixed(2)}
+        </p>
       </section>
 
       <hr />
 
       <section>
-        <h2>Trade {asset.symbol}</h2>
+        <h2>
+          Trade {asset.symbol}
+        </h2>
 
         <label>
           Quantity:
+
           <input
             type="number"
             min="0"
             step="any"
             value={quantity}
-            onChange={handleQuantityChange}
+            onChange={
+              handleQuantityChange
+            }
             placeholder="Enter quantity"
           />
         </label>
 
-        <button type="button" onClick={handleMax}>
+        <button
+          type="button"
+          onClick={handleMax}
+        >
           MAX
         </button>
 
-        <p>Estimated Total: ${estimatedTotal.toFixed(2)}</p>
+        <p>
+          Estimated Total: $
+          {estimatedTotal.toFixed(2)}
+        </p>
 
         <div>
           <button
             type="button"
             onClick={handleBuy}
-            disabled={submittingRef.current}
+            disabled={
+              submittingRef.current
+            }
           >
             BUY
           </button>
@@ -234,7 +297,9 @@ function AssetDetail() {
           <button
             type="button"
             onClick={handleSell}
-            disabled={submittingRef.current}
+            disabled={
+              submittingRef.current
+            }
           >
             SELL
           </button>
@@ -255,15 +320,31 @@ function AssetDetail() {
         <div>
           <h3>Order Summary</h3>
 
-          <p>Side: {currentQuantity > 0 ? "BUY / SELL" : "BUY"}</p>
+          <p>
+            Side:{" "}
+            {currentQuantity > 0
+              ? "BUY / SELL"
+              : "BUY"}
+          </p>
 
-          <p>Asset: {asset.symbol}</p>
+          <p>
+            Asset: {asset.symbol}
+          </p>
 
-          <p>Quantity: {numericQuantity}</p>
+          <p>
+            Quantity:{" "}
+            {numericQuantity}
+          </p>
 
-          <p>Price: ${currentPrice.toFixed(2)}</p>
+          <p>
+            Price: $
+            {currentPrice.toFixed(2)}
+          </p>
 
-          <p>Estimated Value: ${estimatedTotal.toFixed(2)}</p>
+          <p>
+            Estimated Value: $
+            {estimatedTotal.toFixed(2)}
+          </p>
         </div>
       </section>
     </div>

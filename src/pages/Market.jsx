@@ -1,11 +1,19 @@
 import { useMemo, useState } from "react";
-import { assets } from "../data/assets";
 import usePriceFeed from "../hooks/usePriceFeed";
+import { useAssets } from "../hooks/useAssets";
 import AssetCard from "../components/AssetCard";
 import { getPriceChange } from "../utils/priceChange";
 
 function Market() {
   const { prices } = usePriceFeed();
+
+  const {
+    data: assets = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useAssets();
 
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] =
@@ -92,7 +100,35 @@ function Market() {
         return 0;
       },
     );
-  }, [search, sortBy, prices]);
+  }, [search, sortBy, prices, assets]);
+
+  if (isLoading) {
+    return <p>Loading market...</p>;
+  }
+
+  if (isError) {
+    return (
+      <section>
+        <h1>Market</h1>
+
+        <p role="alert">
+          Failed to load market data.
+        </p>
+
+        <p>
+          {error?.message ||
+            "Something went wrong."}
+        </p>
+
+        <button
+          type="button"
+          onClick={() => refetch()}
+        >
+          Try Again
+        </button>
+      </section>
+    );
+  }
 
   return (
     <div>
@@ -158,13 +194,29 @@ function Market() {
           No assets match your search.
         </p>
       ) : (
-        visibleAssets.map((asset) => (
-          <AssetCard
-            key={asset.id}
-            asset={asset}
-            priceData={prices[asset.id]}
-          />
-        ))
+        visibleAssets.map((asset) => {
+          const priceData =
+            prices[asset.id];
+
+          if (!priceData) {
+            return (
+              <div key={asset.id}>
+                <h2>{asset.symbol}</h2>
+                <p>
+                  Price loading...
+                </p>
+              </div>
+            );
+          }
+
+          return (
+            <AssetCard
+              key={asset.id}
+              asset={asset}
+              priceData={priceData}
+            />
+          );
+        })
       )}
     </div>
   );
