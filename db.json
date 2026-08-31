@@ -56,5 +56,13 @@
       "price": 25,
       "volatility": 0.05
     }
+  ],
+  "users": [
+    {
+      "id": "user-1",
+      "name": "Ghania",
+      "email": "ghania@example.com",
+      "password": "password123"
+    }
   ]
 }
