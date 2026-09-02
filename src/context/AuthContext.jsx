@@ -4,6 +4,8 @@ import {
   useState,
 } from "react";
 
+import usePortfolioStore from "../store/portfolioStore";
+
 const AuthContext = createContext(null);
 
 const STORAGE_KEY =
@@ -15,6 +17,11 @@ export function AuthProvider({
   const [user, setUser] = useState(null);
   const [isInitialized, setIsInitialized] =
     useState(false);
+
+  const setActiveUser =
+    usePortfolioStore(
+      (state) => state.setActiveUser,
+    );
 
   useEffect(() => {
     try {
@@ -33,6 +40,9 @@ export function AuthProvider({
           parsedUser.email
         ) {
           setUser(parsedUser);
+          setActiveUser(
+            String(parsedUser.id),
+          );
         }
       }
     } catch {
@@ -42,10 +52,14 @@ export function AuthProvider({
     } finally {
       setIsInitialized(true);
     }
-  }, []);
+  }, [setActiveUser]);
 
   function login(authenticatedUser) {
     setUser(authenticatedUser);
+
+    setActiveUser(
+      String(authenticatedUser.id),
+    );
 
     localStorage.setItem(
       STORAGE_KEY,
@@ -57,6 +71,8 @@ export function AuthProvider({
 
   function logout() {
     setUser(null);
+
+    setActiveUser(null);
 
     localStorage.removeItem(
       STORAGE_KEY,

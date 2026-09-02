@@ -4,7 +4,9 @@ import {
   NavLink,
   Route,
   Routes,
+  useLocation,
 } from "react-router-dom";
+import { useState } from "react";
 
 import Login from "./pages/Login";
 import Market from "./pages/Market";
@@ -22,8 +24,105 @@ import LogoutButton from "./components/LogoutButton";
 import NotificationContainer from "./components/NotificationContainer";
 import ThemeToggle from "./components/ThemeToggle";
 
+import { assets } from "./data/assets";
+
 function NotFound() {
   return <h1>404 - Page Not Found</h1>;
+}
+
+function AssetsDropdown({ mobile = false }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+
+  const isAssetPage = location.pathname.startsWith(
+    "/app/asset/",
+  );
+
+  function handleAssetClick() {
+    setIsOpen(false);
+  }
+
+  if (mobile) {
+    return (
+      <div className="relative flex-1">
+        <button
+          type="button"
+          onClick={() => setIsOpen((current) => !current)}
+          aria-expanded={isOpen}
+          className={`flex w-full items-center justify-center gap-1 rounded-lg px-3 py-2 text-center text-sm font-medium transition ${
+            isAssetPage
+              ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white"
+              : "text-slate-500 dark:text-slate-400"
+          }`}
+        >
+          Assets
+          <span
+            className={`text-xs transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          >
+            ▾
+          </span>
+        </button>
+
+        {isOpen && (
+          <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900">
+            {assets.map((asset) => (
+              <NavLink
+                key={asset.id}
+                to={`/app/asset/${asset.id}`}
+                onClick={handleAssetClick}
+                className="block px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                {asset.name}
+              </NavLink>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen((current) => !current)}
+        aria-expanded={isOpen}
+        className={`flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition ${
+          isAssetPage
+            ? "bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-white"
+            : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-900 dark:hover:text-white"
+        }`}
+      >
+        Assets
+        <span
+          className={`text-xs transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+          aria-hidden="true"
+        >
+          ▾
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+          {assets.map((asset) => (
+            <NavLink
+              key={asset.id}
+              to={`/app/asset/${asset.id}`}
+              onClick={handleAssetClick}
+              className="block px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
+            >
+              {asset.name}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function Navigation() {
@@ -54,6 +153,8 @@ function Navigation() {
             >
               Market
             </NavLink>
+
+            <AssetsDropdown />
 
             <NavLink
               to="/app/portfolio"
@@ -108,6 +209,8 @@ function Navigation() {
             Market
           </NavLink>
 
+          <AssetsDropdown mobile />
+
           <NavLink
             to="/app/portfolio"
             className={({ isActive }) =>
@@ -145,43 +248,43 @@ function ProtectedApp() {
       <Navigation />
 
       <main className="min-h-[calc(100vh-73px)] bg-slate-50 text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
-  <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <Routes>
-          <Route
-            path="/market"
-            element={<Market />}
-          />
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <Routes>
+            <Route
+              path="/market"
+              element={<Market />}
+            />
 
-          <Route
-            path="/portfolio"
-            element={<Portfolio />}
-          />
+            <Route
+              path="/portfolio"
+              element={<Portfolio />}
+            />
 
-          <Route
-            path="/asset/:id"
-            element={<AssetDetail />}
-          />
+            <Route
+              path="/asset/:id"
+              element={<AssetDetail />}
+            />
 
-          <Route
-            path="/leaderboard"
-            element={<Leaderboard />}
-          />
+            <Route
+              path="/leaderboard"
+              element={<Leaderboard />}
+            />
 
-          <Route
-            path="/"
-            element={
-              <Navigate
-                to="/app/market"
-                replace
-              />
-            }
-          />
+            <Route
+              path="/"
+              element={
+                <Navigate
+                  to="/app/market"
+                  replace
+                />
+              }
+            />
 
-          <Route
-            path="*"
-            element={<NotFound />}
-          />
-        </Routes>
+            <Route
+              path="*"
+              element={<NotFound />}
+            />
+          </Routes>
         </div>
       </main>
     </ProtectedRoute>

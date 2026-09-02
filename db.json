@@ -59,9 +59,21 @@
   ],
   "users": [
     {
-      "id": "user-1",
-      "name": "Ghania",
+      "id": "1",
+      "name": "Ghania Iman",
       "email": "ghania@example.com",
+      "password": "password123"
+    },
+    {
+      "id": "2",
+      "name": "Ali Khan",
+      "email": "ali@example.com",
+      "password": "password123"
+    },
+    {
+      "id": "3",
+      "name": "Sara Ahmed",
+      "email": "sara@example.com",
       "password": "password123"
     }
   ],
@@ -155,6 +167,26 @@
       "total": 654.8068918467751,
       "timestamp": "2026-09-02T14:37:50.230Z",
       "userId": "user-1"
+    },
+    {
+      "id": "9g8BNx3nNAY",
+      "userId": "2",
+      "type": "BUY",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65109.73560204823,
+      "total": 651.0973560204824,
+      "timestamp": "2026-09-02T18:03:19.682Z"
+    },
+    {
+      "id": "4TFTKigwtvY",
+      "userId": "2",
+      "type": "SELL",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65581.73766839781,
+      "total": 655.8173766839781,
+      "timestamp": "2026-09-02T18:04:44.867Z"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

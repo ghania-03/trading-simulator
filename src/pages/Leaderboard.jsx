@@ -3,9 +3,7 @@ import { useContext } from "react";
 
 import AuthContext from "../context/AuthContext";
 import { useLeaderboard } from "../hooks/useLeaderboard";
-import {
-  calculateFinancialsFromTransactions,
-} from "../utils/portfolioCalculations";
+import { calculateFinancialsFromTransactions } from "../utils/portfolioCalculations";
 
 function formatPnl(value) {
   const numericValue = Number(value) || 0;
@@ -21,13 +19,7 @@ function formatPnl(value) {
 function Leaderboard() {
   const { user } = useContext(AuthContext);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useLeaderboard();
+  const { data, isLoading, isError, error, refetch } = useLeaderboard();
 
   const leaderboard = useMemo(() => {
     if (!data) {
@@ -38,17 +30,12 @@ function Leaderboard() {
 
     return users
       .map((currentUser) => {
-        const userTransactions =
-          transactions.filter(
-            (transaction) =>
-              transaction.userId ===
-              currentUser.id,
-          );
+        const userTransactions = transactions.filter(
+          (transaction) => transaction.userId === currentUser.id,
+        );
 
         const { realizedPnl } =
-          calculateFinancialsFromTransactions(
-            userTransactions,
-          );
+          calculateFinancialsFromTransactions(userTransactions);
 
         return {
           id: currentUser.id,
@@ -56,10 +43,7 @@ function Leaderboard() {
           realizedPnl,
         };
       })
-      .sort(
-        (a, b) =>
-          b.realizedPnl - a.realizedPnl,
-      )
+      .sort((a, b) => b.realizedPnl - a.realizedPnl)
       .map((currentUser, index) => ({
         ...currentUser,
         rank: index + 1,
@@ -130,9 +114,7 @@ function Leaderboard() {
     );
   }
 
-  const currentUserEntry = leaderboard.find(
-    (entry) => entry.id === user?.id,
-  );
+  const currentUserEntry = leaderboard.find((entry) => entry.id === user?.id);
 
   const topThree = leaderboard.slice(0, 3);
 
@@ -152,8 +134,7 @@ function Leaderboard() {
             </h1>
 
             <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 dark:text-slate-400">
-              See how traders rank based on their
-              realized trading performance.
+              See how traders rank based on their realized trading performance.
             </p>
           </div>
 
@@ -171,17 +152,15 @@ function Leaderboard() {
 
       {/* Current user */}
       {currentUserEntry && (
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 text-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white">
           <div className="flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-sm font-bold">
-                {currentUserEntry.name
-                  .slice(0, 2)
-                  .toUpperCase()}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-sm font-bold dark:bg-white/10">
+                {currentUserEntry.name.slice(0, 2).toUpperCase()}
               </div>
 
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Your Ranking
                 </p>
 
@@ -193,7 +172,7 @@ function Leaderboard() {
 
             <div className="flex items-center gap-8">
               <div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Rank
                 </p>
 
@@ -203,7 +182,7 @@ function Leaderboard() {
               </div>
 
               <div>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Realized P&L
                 </p>
 
@@ -214,9 +193,7 @@ function Leaderboard() {
                       : "text-red-400"
                   }`}
                 >
-                  {formatPnl(
-                    currentUserEntry.realizedPnl,
-                  )}
+                  {formatPnl(currentUserEntry.realizedPnl)}
                 </p>
               </div>
             </div>
@@ -227,9 +204,7 @@ function Leaderboard() {
       {leaderboard.length === 0 ? (
         <section className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 dark:bg-slate-800">
-            <span className="text-lg text-slate-400">
-              #
-            </span>
+            <span className="text-lg text-slate-400">#</span>
           </div>
 
           <h2 className="mt-4 text-sm font-semibold text-slate-900 dark:text-white">
@@ -237,8 +212,7 @@ function Leaderboard() {
           </h2>
 
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            The leaderboard will appear once users are
-            available.
+            The leaderboard will appear once users are available.
           </p>
         </section>
       ) : (
@@ -258,11 +232,9 @@ function Leaderboard() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 {topThree.map((entry) => {
-                  const isCurrentUser =
-                    entry.id === user?.id;
+                  const isCurrentUser = entry.id === user?.id;
 
-                  const positive =
-                    entry.realizedPnl >= 0;
+                  const positive = entry.realizedPnl >= 0;
 
                   return (
                     <div
@@ -275,9 +247,7 @@ function Leaderboard() {
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-sm font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                          {entry.name
-                            .slice(0, 2)
-                            .toUpperCase()}
+                          {entry.name.slice(0, 2).toUpperCase()}
                         </div>
 
                         <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -309,9 +279,7 @@ function Leaderboard() {
                               : "text-red-600 dark:text-red-400"
                           }`}
                         >
-                          {formatPnl(
-                            entry.realizedPnl,
-                          )}
+                          {formatPnl(entry.realizedPnl)}
                         </p>
                       </div>
                     </div>
@@ -354,11 +322,9 @@ function Leaderboard() {
 
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {leaderboard.map((entry) => {
-                    const isCurrentUser =
-                      entry.id === user?.id;
+                    const isCurrentUser = entry.id === user?.id;
 
-                    const positive =
-                      entry.realizedPnl >= 0;
+                    const positive = entry.realizedPnl >= 0;
 
                     return (
                       <tr
@@ -384,9 +350,7 @@ function Leaderboard() {
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                              {entry.name
-                                .slice(0, 2)
-                                .toUpperCase()}
+                              {entry.name.slice(0, 2).toUpperCase()}
                             </div>
 
                             <div>
@@ -411,9 +375,7 @@ function Leaderboard() {
                                 : "text-red-600 dark:text-red-400"
                             }`}
                           >
-                            {formatPnl(
-                              entry.realizedPnl,
-                            )}
+                            {formatPnl(entry.realizedPnl)}
                           </span>
                         </td>
                       </tr>
@@ -426,19 +388,15 @@ function Leaderboard() {
             {/* Mobile */}
             <div className="divide-y divide-slate-200 md:hidden dark:divide-slate-800">
               {leaderboard.map((entry) => {
-                const isCurrentUser =
-                  entry.id === user?.id;
+                const isCurrentUser = entry.id === user?.id;
 
-                const positive =
-                  entry.realizedPnl >= 0;
+                const positive = entry.realizedPnl >= 0;
 
                 return (
                   <div
                     key={entry.id}
                     className={`flex items-center justify-between gap-4 p-5 ${
-                      isCurrentUser
-                        ? "bg-slate-50 dark:bg-slate-800/50"
-                        : ""
+                      isCurrentUser ? "bg-slate-50 dark:bg-slate-800/50" : ""
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
@@ -472,9 +430,7 @@ function Leaderboard() {
                           : "text-red-600 dark:text-red-400"
                       }`}
                     >
-                      {formatPnl(
-                        entry.realizedPnl,
-                      )}
+                      {formatPnl(entry.realizedPnl)}
                     </p>
                   </div>
                 );

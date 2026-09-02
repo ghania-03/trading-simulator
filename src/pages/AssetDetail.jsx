@@ -234,10 +234,11 @@ function AssetDetail() {
 
     try {
       const result = buy(
-        asset.id,
-        tradeQuantity,
-        currentPrice,
-      );
+  asset.id,
+  tradeQuantity,
+  currentPrice,
+  String(user.id),
+);
 
       if (!result?.success) {
         return;
@@ -288,10 +289,11 @@ function AssetDetail() {
 
     try {
       const result = sell(
-        asset.id,
-        tradeQuantity,
-        currentPrice,
-      );
+  asset.id,
+  tradeQuantity,
+  currentPrice,
+  String(user.id),
+);
 
       if (!result?.success) {
         return;
