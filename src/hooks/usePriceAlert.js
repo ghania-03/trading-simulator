@@ -1,50 +1,44 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { usePriceAlerts } from "../context/PriceAlertContext";
 
-function usePriceAlert(
-  assetId,
-  threshold,
-  direction,
-  assetSymbol,
-) {
+function usePriceAlert(assetId, assetSymbol) {
   const {
     alerts,
     addAlert,
     removeAlert,
   } = usePriceAlerts();
 
-  const numericThreshold = Number(threshold);
+  const assetAlerts = useMemo(() => {
+    return alerts.filter(
+      (alert) => alert.assetId === assetId,
+    );
+  }, [alerts, assetId]);
 
-  const activeAlert = alerts.find(
-    (alert) =>
-      alert.assetId === assetId &&
-      alert.threshold === numericThreshold &&
-      alert.direction === direction,
+  const enableAlert = useCallback(
+    ({ threshold, direction }) => {
+      return addAlert({
+        assetId,
+        assetSymbol,
+        threshold,
+        direction,
+      });
+    },
+    [
+      addAlert,
+      assetId,
+      assetSymbol,
+    ],
   );
 
-  const enableAlert = useCallback(() => {
-    return addAlert({
-      assetId,
-      threshold: numericThreshold,
-      direction,
-      assetSymbol,
-    });
-  }, [
-    addAlert,
-    assetId,
-    numericThreshold,
-    direction,
-    assetSymbol,
-  ]);
-
-  const disableAlert = useCallback(() => {
-    if (activeAlert) {
-      removeAlert(activeAlert.id);
-    }
-  }, [activeAlert, removeAlert]);
+  const disableAlert = useCallback(
+    (alertId) => {
+      removeAlert(alertId);
+    },
+    [removeAlert],
+  );
 
   return {
-    isActive: Boolean(activeAlert),
+    alerts: assetAlerts,
     enableAlert,
     disableAlert,
   };

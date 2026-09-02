@@ -12,23 +12,87 @@ import { useNotifications } from "./NotificationContext";
 
 const PriceAlertContext = createContext(null);
 
+const STORAGE_KEY = "trading-simulator-price-alerts";
+
 let alertId = 0;
 
 function createAlertId() {
   alertId += 1;
+
   return `alert-${Date.now()}-${alertId}`;
+}
+
+function getInitialAlerts() {
+  try {
+    const storedAlerts =
+      localStorage.getItem(STORAGE_KEY);
+
+    if (!storedAlerts) {
+      return [];
+    }
+
+    const parsedAlerts = JSON.parse(storedAlerts);
+
+    if (!Array.isArray(parsedAlerts)) {
+      return [];
+    }
+
+    return parsedAlerts.filter((alert) => {
+      return (
+        alert &&
+        typeof alert.id === "string" &&
+        typeof alert.assetId === "string" &&
+        typeof alert.assetSymbol === "string" &&
+        Number.isFinite(alert.threshold) &&
+        alert.threshold > 0 &&
+        ["above", "below"].includes(
+          alert.direction,
+        )
+      );
+    });
+  } catch {
+    return [];
+  }
 }
 
 export function PriceAlertProvider({ children }) {
   const { prices } = usePriceFeed();
   const { info } = useNotifications();
 
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, setAlerts] = useState(
+    getInitialAlerts,
+  );
 
   const previousPricesRef = useRef({});
 
+  /*
+   * Persist alerts whenever the alert list changes.
+   */
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(alerts),
+      );
+    } catch {
+      // Ignore localStorage errors.
+    }
+  }, [alerts]);
+
+  /*
+   * Add a new alert.
+   *
+   * Multiple alerts are allowed for the same asset,
+   * as long as the exact same threshold + direction
+   * combination does not already exist.
+   */
   const addAlert = useCallback(
-    ({ assetId, threshold, direction, assetSymbol }) => {
+    ({
+      assetId,
+      assetSymbol,
+      threshold,
+      direction,
+    }) => {
       const numericThreshold = Number(threshold);
 
       if (
@@ -41,53 +105,84 @@ export function PriceAlertProvider({ children }) {
         return null;
       }
 
-      const existingAlert = alerts.find(
-        (alert) =>
-          alert.assetId === assetId &&
-          alert.threshold === numericThreshold &&
-          alert.direction === direction,
-      );
+      let createdAlertId = null;
 
-      if (existingAlert) {
-        return existingAlert.id;
-      }
+      setAlerts((currentAlerts) => {
+        const existingAlert =
+          currentAlerts.find(
+            (alert) =>
+              alert.assetId === assetId &&
+              alert.threshold ===
+                numericThreshold &&
+              alert.direction === direction,
+          );
 
-      const id = createAlertId();
+        if (existingAlert) {
+          createdAlertId = existingAlert.id;
 
-      setAlerts((current) => [
-        ...current,
-        {
+          return currentAlerts;
+        }
+
+        const id = createAlertId();
+
+        createdAlertId = id;
+
+        const newAlert = {
           id,
           assetId,
           assetSymbol,
           threshold: numericThreshold,
           direction,
-        },
-      ]);
+        };
 
-      return id;
+        return [
+          ...currentAlerts,
+          newAlert,
+        ];
+      });
+
+      return createdAlertId;
     },
-    [alerts],
+    [],
   );
 
+  /*
+   * Remove one specific alert.
+   */
   const removeAlert = useCallback((id) => {
-    setAlerts((current) =>
-      current.filter((alert) => alert.id !== id),
-    );
-  }, []);
-
-  const removeAlertsForAsset = useCallback((assetId) => {
-    setAlerts((current) =>
-      current.filter(
-        (alert) => alert.assetId !== assetId,
+    setAlerts((currentAlerts) =>
+      currentAlerts.filter(
+        (alert) => alert.id !== id,
       ),
     );
   }, []);
 
+  /*
+   * Remove every alert belonging to one asset.
+   */
+  const removeAlertsForAsset = useCallback(
+    (assetId) => {
+      setAlerts((currentAlerts) =>
+        currentAlerts.filter(
+          (alert) => alert.assetId !== assetId,
+        ),
+      );
+    },
+    [],
+  );
+
+  /*
+   * Global price-alert monitoring.
+   *
+   * This runs inside PriceAlertProvider, NOT inside
+   * Asset Detail, so alerts continue working when
+   * the user navigates to another page.
+   */
   useEffect(() => {
     Object.entries(prices).forEach(
       ([assetId, priceData]) => {
-        const currentPrice = priceData?.current;
+        const currentPrice =
+          priceData?.current;
 
         if (
           typeof currentPrice !== "number" ||
@@ -102,6 +197,10 @@ export function PriceAlertProvider({ children }) {
         previousPricesRef.current[assetId] =
           currentPrice;
 
+        /*
+         * On the first price update there is no
+         * previous price to compare against.
+         */
         if (
           typeof previousPrice !== "number" ||
           !Number.isFinite(previousPrice)
@@ -167,7 +266,9 @@ export function PriceAlertProvider({ children }) {
 }
 
 export function usePriceAlerts() {
-  const context = useContext(PriceAlertContext);
+  const context = useContext(
+    PriceAlertContext,
+  );
 
   if (!context) {
     throw new Error(
