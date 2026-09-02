@@ -135,6 +135,16 @@
       "total": 6508.278957005439,
       "timestamp": "2026-09-02T09:32:36.241Z",
       "userId": "user-1"
+    },
+    {
+      "id": "CGfwkZutVTQ",
+      "type": "BUY",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 64920.291864985105,
+      "total": 649.2029186498511,
+      "timestamp": "2026-09-02T13:02:11.135Z",
+      "userId": "user-1"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

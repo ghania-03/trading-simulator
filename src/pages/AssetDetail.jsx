@@ -6,6 +6,7 @@ import {
 } from "react";
 import { useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 
 import { useAsset } from "../hooks/useAssets";
 import usePriceFeed from "../hooks/usePriceFeed";
@@ -21,16 +22,15 @@ import {
 import { useNotifications } from "../context/NotificationContext";
 import PriceAlertControls from "../components/PriceAlertControls";
 
-
 function AssetDetail() {
   const { id } = useParams();
 
   const { user } =
-  useContext(AuthContext);
+    useContext(AuthContext);
+
   const {
-  mutateAsync: saveTransaction,
-} =
-  useMutation({
+    mutateAsync: saveTransaction,
+  } = useMutation({
     mutationFn: createTransaction,
   });
 
@@ -42,34 +42,48 @@ function AssetDetail() {
     refetch,
   } = useAsset(id);
 
-  const { success, error: showNotification } =
-  useNotifications();
+  const {
+    success,
+    error: showNotification,
+  } = useNotifications();
 
   const error = usePortfolioStore(
     (state) => state.error,
   );
 
   useEffect(() => {
-  if (error) {
-    showNotification(error);
-  }
-}, [error, showNotification]);
+    if (error) {
+      showNotification(error);
+    }
+  }, [error, showNotification]);
 
   const { prices } = usePriceFeed();
 
-  const [quantity, setQuantity] =
-    useState("");
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      quantity: "",
+    },
+  });
+
+  const quantity = watch("quantity");
 
   const submittingRef = useRef(false);
 
-const [isSubmitting, setIsSubmitting] =
-  useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   const rollbackTransaction =
-  usePortfolioStore(
-    (state) =>
-      state.rollbackTransaction,
-  );
+    usePortfolioStore(
+      (state) =>
+        state.rollbackTransaction,
+    );
 
   const cash = usePortfolioStore(
     (state) => state.cash,
@@ -86,8 +100,6 @@ const [isSubmitting, setIsSubmitting] =
   const sell = usePortfolioStore(
     (state) => state.sell,
   );
-
-  
 
   const clearError =
     usePortfolioStore(
@@ -163,133 +175,133 @@ const [isSubmitting, setIsSubmitting] =
         )
       : 0;
 
-  function handleQuantityChange(
-    event,
-  ) {
-    setQuantity(event.target.value);
-
-    if (error) {
-      clearError();
-    }
-  }
-
   function handleMax() {
     clearError();
 
-    setQuantity(
+    setValue(
+      "quantity",
       String(
         currentQuantity > 0
           ? currentQuantity
           : maxBuyQuantity,
       ),
+      {
+        shouldValidate: true,
+      },
     );
   }
 
-async function handleBuy() {
-  if (
-    submittingRef.current ||
-    !user
-  ) {
-    return;
-  }
-
-  submittingRef.current = true;
-  setIsSubmitting(true);
-
-  try {
-    const result = buy(
-      asset.id,
-      numericQuantity,
-      currentPrice,
-    );
-
-    if (!result?.success) {
+  async function handleBuy(data) {
+    if (
+      submittingRef.current ||
+      !user
+    ) {
       return;
     }
 
+    const tradeQuantity =
+      Number(data.quantity);
+
+    submittingRef.current = true;
+    setIsSubmitting(true);
+
     try {
-      await saveTransaction({
-        ...result.transaction,
-        userId: user.id,
-      });
-
-      setQuantity("");
-
-      success(
-        `Bought ${numericQuantity} ${asset.symbol} for $${result.transaction.total.toFixed(2)}.`,
-      );
-    } catch (syncError) {
-      rollbackTransaction(
-        result.transaction.id,
+      const result = buy(
+        asset.id,
+        tradeQuantity,
+        currentPrice,
       );
 
-      showNotification(
-        "Trade could not be saved. Your BUY was reverted.",
-      );
+      if (!result?.success) {
+        return;
+      }
 
-      console.error(
-        "Failed to sync transaction:",
-        syncError,
-      );
+      try {
+        await saveTransaction({
+          ...result.transaction,
+          userId: user.id,
+        });
+
+        reset();
+
+        success(
+          `Bought ${tradeQuantity} ${asset.symbol} for $${result.transaction.total.toFixed(2)}.`,
+        );
+      } catch (syncError) {
+        rollbackTransaction(
+          result.transaction.id,
+        );
+
+        showNotification(
+          "Trade could not be saved. Your BUY was reverted.",
+        );
+
+        console.error(
+          "Failed to sync transaction:",
+          syncError,
+        );
+      }
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
     }
-  } finally {
-    submittingRef.current = false;
-    setIsSubmitting(false);
-  }
-}
-
-async function handleSell() {
-  if (
-    submittingRef.current ||
-    !user
-  ) {
-    return;
   }
 
-  submittingRef.current = true;
-  setIsSubmitting(true);
-
-  try {
-    const result = sell(
-      asset.id,
-      numericQuantity,
-      currentPrice,
-    );
-
-    if (!result?.success) {
+  async function handleSell(data) {
+    if (
+      submittingRef.current ||
+      !user
+    ) {
       return;
     }
 
+    const tradeQuantity =
+      Number(data.quantity);
+
+    submittingRef.current = true;
+    setIsSubmitting(true);
+
     try {
-      await saveTransaction({
-        ...result.transaction,
-        userId: user.id,
-      });
-
-      setQuantity("");
-
-      success(
-        `Sold ${numericQuantity} ${asset.symbol} for $${result.transaction.total.toFixed(2)}.`,
-      );
-    } catch (syncError) {
-      rollbackTransaction(
-        result.transaction.id,
+      const result = sell(
+        asset.id,
+        tradeQuantity,
+        currentPrice,
       );
 
-      showNotification(
-        "Trade could not be saved. Your SELL was reverted.",
-      );
+      if (!result?.success) {
+        return;
+      }
 
-      console.error(
-        "Failed to sync transaction:",
-        syncError,
-      );
+      try {
+        await saveTransaction({
+          ...result.transaction,
+          userId: user.id,
+        });
+
+        reset();
+
+        success(
+          `Sold ${tradeQuantity} ${asset.symbol} for $${result.transaction.total.toFixed(2)}.`,
+        );
+      } catch (syncError) {
+        rollbackTransaction(
+          result.transaction.id,
+        );
+
+        showNotification(
+          "Trade could not be saved. Your SELL was reverted.",
+        );
+
+        console.error(
+          "Failed to sync transaction:",
+          syncError,
+        );
+      }
+    } finally {
+      submittingRef.current = false;
+      setIsSubmitting(false);
     }
-  } finally {
-    submittingRef.current = false;
-    setIsSubmitting(false);
   }
-}
 
   return (
     <div>
@@ -332,7 +344,9 @@ async function handleSell() {
 
       <hr />
 
-      <PriceAlertControls asset={asset} />
+      <PriceAlertControls
+        asset={asset}
+      />
 
       <hr />
 
@@ -363,66 +377,96 @@ async function handleSell() {
           Trade {asset.symbol}
         </h2>
 
-        <label>
-          Quantity:
+        <form>
+          <label htmlFor="quantity">
+            Quantity:
+          </label>
 
           <input
+            id="quantity"
             type="number"
             min="0"
             step="any"
-            value={quantity}
-            onChange={
-              handleQuantityChange
-            }
             placeholder="Enter quantity"
+            {...register("quantity", {
+              required:
+                "Please enter a quantity.",
+              validate: (value) => {
+                const numericValue =
+                  Number(value);
+
+                if (
+                  !Number.isFinite(
+                    numericValue,
+                  ) ||
+                  numericValue <= 0
+                ) {
+                  return "Quantity must be greater than 0.";
+                }
+
+                return true;
+              },
+              onChange: () => {
+                if (error) {
+                  clearError();
+                }
+              },
+            })}
           />
-        </label>
-
-        <button
-          type="button"
-          onClick={handleMax}
-        >
-          MAX
-        </button>
-
-        <p>
-          Estimated Total: $
-          {estimatedTotal.toFixed(2)}
-        </p>
-
-        <div>
-          <button
-            type="button"
-            onClick={handleBuy}
-            disabled={
-              isSubmitting
-            }
-          >
-            BUY
-          </button>
 
           <button
             type="button"
-            onClick={handleSell}
-            disabled={
-              isSubmitting
-            }
+            onClick={handleMax}
+            disabled={isSubmitting}
           >
-            SELL
+            MAX
           </button>
-        </div>
 
-        {error && (
-          <p
-            role="alert"
-            style={{
-              color: "red",
-              marginTop: "10px",
-            }}
-          >
-            {error}
+          {errors.quantity && (
+            <p role="alert">
+              {errors.quantity.message}
+            </p>
+          )}
+
+          <p>
+            Estimated Total: $
+            {estimatedTotal.toFixed(2)}
           </p>
-        )}
+
+          <div>
+            <button
+              type="button"
+              onClick={handleSubmit(handleBuy)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Processing..."
+                : "BUY"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSubmit(handleSell)}
+              disabled={isSubmitting}
+            >
+              {isSubmitting
+                ? "Processing..."
+                : "SELL"}
+            </button>
+          </div>
+
+          {error && (
+            <p
+              role="alert"
+              style={{
+                color: "red",
+                marginTop: "10px",
+              }}
+            >
+              {error}
+            </p>
+          )}
+        </form>
 
         <div>
           <h3>Order Summary</h3>
