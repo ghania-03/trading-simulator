@@ -9,14 +9,10 @@ const STARTING_CASH = 10000;
 const STORAGE_VERSION = 2;
 
 const createTransactionId = () => {
-  return `${Date.now()}-${Math.random()
-    .toString(36)
-    .slice(2, 9)}`;
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 };
 
-const normalizeTransactions = (
-  transactions,
-) => {
+const normalizeTransactions = (transactions) => {
   if (!Array.isArray(transactions)) {
     return [];
   }
@@ -24,8 +20,7 @@ const normalizeTransactions = (
   return transactions.filter(
     (transaction) =>
       transaction &&
-      (transaction.type === "BUY" ||
-        transaction.type === "SELL") &&
+      (transaction.type === "BUY" || transaction.type === "SELL") &&
       typeof transaction.assetId === "string" &&
       Number.isFinite(transaction.quantity) &&
       transaction.quantity > 0 &&
@@ -35,10 +30,7 @@ const normalizeTransactions = (
 };
 
 const migratePortfolio = (persistedState) => {
-  if (
-    !persistedState ||
-    typeof persistedState !== "object"
-  ) {
+  if (!persistedState || typeof persistedState !== "object") {
     return {
       cash: STARTING_CASH,
       holdings: {},
@@ -47,19 +39,12 @@ const migratePortfolio = (persistedState) => {
     };
   }
 
-  const transactions =
-    normalizeTransactions(
-      persistedState.transactions,
-    );
+  const transactions = normalizeTransactions(persistedState.transactions);
 
-  const reconstructed =
-    calculateFinancialsFromTransactions(
-      transactions,
-    );
+  const reconstructed = calculateFinancialsFromTransactions(transactions);
 
   const persistedHoldings =
-    persistedState.holdings &&
-    typeof persistedState.holdings === "object"
+    persistedState.holdings && typeof persistedState.holdings === "object"
       ? persistedState.holdings
       : {};
 
@@ -79,19 +64,15 @@ const migratePortfolio = (persistedState) => {
   ]);
 
   for (const assetId of assetIds) {
-    const reconstructedPosition =
-      reconstructed.positions[assetId];
+    const reconstructedPosition = reconstructed.positions[assetId];
 
-    const persistedHolding =
-      persistedHoldings[assetId];
+    const persistedHolding = persistedHoldings[assetId];
 
     if (reconstructedPosition) {
       if (reconstructedPosition.quantity > 0) {
         holdings[assetId] = {
-          quantity:
-            reconstructedPosition.quantity,
-          averageBuyPrice:
-            reconstructedPosition.averageBuyPrice,
+          quantity: reconstructedPosition.quantity,
+          averageBuyPrice: reconstructedPosition.averageBuyPrice,
         };
       }
 
@@ -100,19 +81,13 @@ const migratePortfolio = (persistedState) => {
 
     if (
       persistedHolding &&
-      Number.isFinite(
-        persistedHolding.quantity,
-      ) &&
+      Number.isFinite(persistedHolding.quantity) &&
       persistedHolding.quantity > 0
     ) {
       holdings[assetId] = {
-        quantity: roundQuantity(
-          persistedHolding.quantity,
-        ),
+        quantity: roundQuantity(persistedHolding.quantity),
         averageBuyPrice:
-          Number.isFinite(
-            persistedHolding.averageBuyPrice,
-          ) &&
+          Number.isFinite(persistedHolding.averageBuyPrice) &&
           persistedHolding.averageBuyPrice > 0
             ? persistedHolding.averageBuyPrice
             : 0,
@@ -122,8 +97,7 @@ const migratePortfolio = (persistedState) => {
 
   return {
     cash:
-      Number.isFinite(persistedState.cash) &&
-      persistedState.cash >= 0
+      Number.isFinite(persistedState.cash) && persistedState.cash >= 0
         ? persistedState.cash
         : STARTING_CASH,
 
@@ -147,15 +121,55 @@ const usePortfolioStore = create(
         set({
           error: null,
         }),
+      rollbackTransaction: (transactionId) => {
+        set((state) => {
+          const transaction = state.transactions.find(
+            (item) => item.id === transactionId,
+          );
 
+          if (!transaction) {
+            return {};
+          }
+
+          const remainingTransactions = state.transactions.filter(
+            (item) => item.id !== transactionId,
+          );
+
+          const reconstructed = calculateFinancialsFromTransactions(
+            remainingTransactions,
+          );
+
+          const holdings = {};
+
+          for (const [assetId, position] of Object.entries(
+            reconstructed.positions,
+          )) {
+            if (position.quantity > 0) {
+              holdings[assetId] = {
+                quantity: position.quantity,
+                averageBuyPrice: position.averageBuyPrice,
+              };
+            }
+          }
+
+          const updatedCash =
+            transaction.type === "BUY"
+              ? state.cash + transaction.total
+              : state.cash - transaction.total;
+
+          return {
+            cash: updatedCash,
+            holdings,
+            transactions: remainingTransactions,
+            error: null,
+          };
+        });
+      },
       buy: (assetId, quantity, price) => {
         let result;
 
         set((state) => {
-          if (
-            !assetId ||
-            typeof assetId !== "string"
-          ) {
+          if (!assetId || typeof assetId !== "string") {
             result = {
               success: false,
               error: "Invalid asset",
@@ -166,14 +180,10 @@ const usePortfolioStore = create(
             };
           }
 
-          if (
-            !Number.isFinite(quantity) ||
-            quantity <= 0
-          ) {
+          if (!Number.isFinite(quantity) || quantity <= 0) {
             result = {
               success: false,
-              error:
-                "Quantity must be greater than 0",
+              error: "Quantity must be greater than 0",
             };
 
             return {
@@ -181,10 +191,7 @@ const usePortfolioStore = create(
             };
           }
 
-          if (
-            !Number.isFinite(price) ||
-            price <= 0
-          ) {
+          if (!Number.isFinite(price) || price <= 0) {
             result = {
               success: false,
               error: "Invalid price",
@@ -195,8 +202,7 @@ const usePortfolioStore = create(
             };
           }
 
-          const totalCost =
-            quantity * price;
+          const totalCost = quantity * price;
 
           if (totalCost > state.cash) {
             result = {
@@ -209,28 +215,19 @@ const usePortfolioStore = create(
             };
           }
 
-          const existingHolding =
-            state.holdings[assetId];
+          const existingHolding = state.holdings[assetId];
 
-          const oldQuantity =
-            existingHolding?.quantity || 0;
+          const oldQuantity = existingHolding?.quantity || 0;
 
-          const oldAverageBuyPrice =
-            existingHolding?.averageBuyPrice ||
-            0;
+          const oldAverageBuyPrice = existingHolding?.averageBuyPrice || 0;
 
-          const newQuantity = roundQuantity(
-            oldQuantity + quantity,
-          );
+          const newQuantity = roundQuantity(oldQuantity + quantity);
 
           const newAverageBuyPrice =
             oldQuantity === 0
               ? price
-              : (
-                  oldQuantity *
-                    oldAverageBuyPrice +
-                  quantity * price
-                ) / newQuantity;
+              : (oldQuantity * oldAverageBuyPrice + quantity * price) /
+                newQuantity;
 
           const transaction = {
             id: createTransactionId(),
@@ -239,32 +236,27 @@ const usePortfolioStore = create(
             quantity,
             price,
             total: totalCost,
-            timestamp:
-              new Date().toISOString(),
+            timestamp: new Date().toISOString(),
           };
 
           result = {
             success: true,
+            transaction,
           };
 
           return {
-            cash:
-              state.cash - totalCost,
+            cash: state.cash - totalCost,
 
             holdings: {
               ...state.holdings,
 
               [assetId]: {
                 quantity: newQuantity,
-                averageBuyPrice:
-                  newAverageBuyPrice,
+                averageBuyPrice: newAverageBuyPrice,
               },
             },
 
-            transactions: [
-              ...state.transactions,
-              transaction,
-            ],
+            transactions: [...state.transactions, transaction],
 
             error: null,
           };
@@ -277,10 +269,7 @@ const usePortfolioStore = create(
         let result;
 
         set((state) => {
-          if (
-            !assetId ||
-            typeof assetId !== "string"
-          ) {
+          if (!assetId || typeof assetId !== "string") {
             result = {
               success: false,
               error: "Invalid asset",
@@ -291,14 +280,10 @@ const usePortfolioStore = create(
             };
           }
 
-          if (
-            !Number.isFinite(quantity) ||
-            quantity <= 0
-          ) {
+          if (!Number.isFinite(quantity) || quantity <= 0) {
             result = {
               success: false,
-              error:
-                "Quantity must be greater than 0",
+              error: "Quantity must be greater than 0",
             };
 
             return {
@@ -306,10 +291,7 @@ const usePortfolioStore = create(
             };
           }
 
-          if (
-            !Number.isFinite(price) ||
-            price <= 0
-          ) {
+          if (!Number.isFinite(price) || price <= 0) {
             result = {
               success: false,
               error: "Invalid price",
@@ -320,8 +302,7 @@ const usePortfolioStore = create(
             };
           }
 
-          const existingHolding =
-            state.holdings[assetId];
+          const existingHolding = state.holdings[assetId];
 
           if (!existingHolding) {
             result = {
@@ -334,12 +315,9 @@ const usePortfolioStore = create(
             };
           }
 
-          const availableQuantity =
-            existingHolding.quantity;
+          const availableQuantity = existingHolding.quantity;
 
-          if (
-            quantity > availableQuantity
-          ) {
+          if (quantity > availableQuantity) {
             result = {
               success: false,
               error: "Insufficient holdings",
@@ -350,13 +328,9 @@ const usePortfolioStore = create(
             };
           }
 
-          const totalValue =
-            quantity * price;
+          const totalValue = quantity * price;
 
-          const newQuantity =
-            roundQuantity(
-              availableQuantity - quantity,
-            );
+          const newQuantity = roundQuantity(availableQuantity - quantity);
 
           const updatedHoldings = {
             ...state.holdings,
@@ -367,8 +341,7 @@ const usePortfolioStore = create(
           } else {
             updatedHoldings[assetId] = {
               quantity: newQuantity,
-              averageBuyPrice:
-                existingHolding.averageBuyPrice,
+              averageBuyPrice: existingHolding.averageBuyPrice,
             };
           }
 
@@ -379,24 +352,20 @@ const usePortfolioStore = create(
             quantity,
             price,
             total: totalValue,
-            timestamp:
-              new Date().toISOString(),
+            timestamp: new Date().toISOString(),
           };
 
           result = {
             success: true,
+            transaction,
           };
 
           return {
-            cash:
-              state.cash + totalValue,
+            cash: state.cash + totalValue,
 
             holdings: updatedHoldings,
 
-            transactions: [
-              ...state.transactions,
-              transaction,
-            ],
+            transactions: [...state.transactions, transaction],
 
             error: null,
           };
@@ -412,9 +381,7 @@ const usePortfolioStore = create(
       version: STORAGE_VERSION,
 
       migrate: (persistedState) => {
-        return migratePortfolio(
-          persistedState,
-        );
+        return migratePortfolio(persistedState);
       },
 
       partialize: (state) => ({

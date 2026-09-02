@@ -1,6 +1,7 @@
 import {
   BrowserRouter,
   Navigate,
+  NavLink,
   Route,
   Routes,
 } from "react-router-dom";
@@ -21,42 +22,50 @@ function NotFound() {
   return <h1>404 - Page Not Found</h1>;
 }
 
+function Navigation() {
+  return (
+    <nav>
+      <h1>Trading Simulator</h1>
+
+      <div>
+        <NavLink to="/app/market">Market</NavLink>
+
+        {" | "}
+
+        <NavLink to="/app/portfolio">Portfolio</NavLink>
+
+        {" | "}
+
+        <NavLink to="/app/leaderboard">Leaderboard</NavLink>
+      </div>
+
+      <LogoutButton />
+
+      <hr />
+    </nav>
+  );
+}
+
 function ProtectedApp() {
   return (
     <ProtectedRoute>
-      <LogoutButton />
+      <Navigation />
 
-      <Routes>
-        <Route
-          path="market"
-          element={<Market />}
-        />
+      <main>
+        <Routes>
+          <Route path="/market" element={<Market />} />
 
-        <Route
-          path="portfolio"
-          element={<Portfolio />}
-        />
+          <Route path="/portfolio" element={<Portfolio />} />
 
-        <Route
-          path="asset/:id"
-          element={<AssetDetail />}
-        />
+          <Route path="/asset/:id" element={<AssetDetail />} />
 
-        <Route
-          path="leaderboard"
-          element={<Leaderboard />}
-        />
+          <Route path="/leaderboard" element={<Leaderboard />} />
 
-        <Route
-          path="*"
-          element={
-            <Navigate
-              to="market"
-              replace
-            />
-          }
-        />
-      </Routes>
+          <Route path="/" element={<Navigate to="/app/market" replace />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
     </ProtectedRoute>
   );
 }
@@ -67,30 +76,13 @@ function App() {
       <AuthProvider>
         <PriceFeedProvider>
           <Routes>
-            <Route
-              path="/login"
-              element={<Login />}
-            />
+            <Route path="/login" element={<Login />} />
 
-            <Route
-              path="/app/*"
-              element={<ProtectedApp />}
-            />
+            <Route path="/app/*" element={<ProtectedApp />} />
 
-            <Route
-              path="/"
-              element={
-                <Navigate
-                  to="/app/market"
-                  replace
-                />
-              }
-            />
+            <Route path="/" element={<Navigate to="/app/market" replace />} />
 
-            <Route
-              path="*"
-              element={<NotFound />}
-            />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </PriceFeedProvider>
       </AuthProvider>

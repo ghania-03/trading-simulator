@@ -1,17 +1,33 @@
 import {
+  useContext,
   useRef,
   useState,
 } from "react";
 import { useParams } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+
 import { useAsset } from "../hooks/useAssets";
 import usePriceFeed from "../hooks/usePriceFeed";
 import usePortfolioStore from "../store/portfolioStore";
 import { getPriceChange } from "../utils/priceChange";
 import { roundQuantity } from "../utils/portfolioCalculations";
 import PriceChart from "../components/PriceChart";
+import AuthContext from "../context/AuthContext";
+import {
+  createTransaction,
+} from "../services/transactionService";
 
 function AssetDetail() {
   const { id } = useParams();
+
+  const { user } =
+  useContext(AuthContext);
+  const {
+  mutateAsync: saveTransaction,
+} =
+  useMutation({
+    mutationFn: createTransaction,
+  });
 
   const {
     data: asset,
@@ -27,6 +43,15 @@ function AssetDetail() {
     useState("");
 
   const submittingRef = useRef(false);
+
+const [isSubmitting, setIsSubmitting] =
+  useState(false);
+
+  const rollbackTransaction =
+  usePortfolioStore(
+    (state) =>
+      state.rollbackTransaction,
+  );
 
   const cash = usePortfolioStore(
     (state) => state.cash,
@@ -144,49 +169,95 @@ function AssetDetail() {
     );
   }
 
-  function handleBuy() {
-    if (submittingRef.current) {
+  async function handleBuy() {
+  if (
+    submittingRef.current ||
+    !user
+  ) {
+    return;
+  }
+
+  submittingRef.current = true;
+  setIsSubmitting(true);
+
+  try {
+    const result = buy(
+      asset.id,
+      numericQuantity,
+      currentPrice,
+    );
+
+    if (!result?.success) {
       return;
     }
 
-    submittingRef.current = true;
-
     try {
-      const result = buy(
-        asset.id,
-        numericQuantity,
-        currentPrice,
+      await saveTransaction({
+        ...result.transaction,
+        userId: user.id,
+      });
+
+      setQuantity("");
+    } catch (syncError) {
+      rollbackTransaction(
+        result.transaction.id,
       );
 
-      if (result?.success) {
-        setQuantity("");
-      }
-    } finally {
-      submittingRef.current = false;
+      console.error(
+        "Failed to sync transaction:",
+        syncError,
+      );
     }
+  } finally {
+    submittingRef.current = false;
+    setIsSubmitting(false);
+  }
+}
+
+  async function handleSell() {
+  if (
+    submittingRef.current ||
+    !user
+  ) {
+    return;
   }
 
-  function handleSell() {
-    if (submittingRef.current) {
+  submittingRef.current = true;
+  setIsSubmitting(true);
+
+  try {
+    const result = sell(
+      asset.id,
+      numericQuantity,
+      currentPrice,
+    );
+
+    if (!result?.success) {
       return;
     }
 
-    submittingRef.current = true;
-
     try {
-      const result = sell(
-        asset.id,
-        numericQuantity,
-        currentPrice,
+      await saveTransaction({
+        ...result.transaction,
+        userId: user.id,
+      });
+
+      setQuantity("");
+    } catch (syncError) {
+      rollbackTransaction(
+        result.transaction.id,
       );
 
-      if (result?.success) {
-        setQuantity("");
-      }
-    } finally {
-      submittingRef.current = false;
+      console.error(
+        "Failed to sync transaction:",
+        syncError,
+      );
     }
+  } finally {
+    submittingRef.current = false;
+    setIsSubmitting(false);
   }
+}
 
   return (
     <div>
@@ -288,7 +359,7 @@ function AssetDetail() {
             type="button"
             onClick={handleBuy}
             disabled={
-              submittingRef.current
+              isSubmitting
             }
           >
             BUY
@@ -298,7 +369,7 @@ function AssetDetail() {
             type="button"
             onClick={handleSell}
             disabled={
-              submittingRef.current
+              isSubmitting
             }
           >
             SELL

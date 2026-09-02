@@ -64,5 +64,58 @@
       "email": "ghania@example.com",
       "password": "password123"
     }
-  ]
+  ],
+  "transactions": [
+    {
+      "id": "TSe7zVi01ck",
+      "type": "BUY",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65117.02031829261,
+      "total": 651.1702031829261,
+      "timestamp": "2026-09-02T08:55:23.708Z",
+      "userId": "user-1"
+    },
+    {
+      "id": "2e9GERpk-WI",
+      "type": "SELL",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65092.14134616568,
+      "total": 650.9214134616568,
+      "timestamp": "2026-09-02T08:56:15.809Z",
+      "userId": "user-1"
+    },
+    {
+      "id": "fvi4BPjmozA",
+      "type": "BUY",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 64856.207559842835,
+      "total": 648.5620755984284,
+      "timestamp": "2026-09-02T09:21:15.243Z",
+      "userId": "user-1"
+    },
+    {
+      "id": "Fq5zVbdBm6Y",
+      "type": "SELL",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65229.73641404508,
+      "total": 652.2973641404508,
+      "timestamp": "2026-09-02T09:22:02.562Z",
+      "userId": "user-1"
+    },
+    {
+      "id": "RekwIlO9b6M",
+      "type": "BUY",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65025.175048972036,
+      "total": 650.2517504897204,
+      "timestamp": "2026-09-02T09:22:21.350Z",
+      "userId": "user-1"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }
