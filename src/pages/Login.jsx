@@ -3,13 +3,17 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 
 import AuthContext from "../context/AuthContext";
 import useAuth from "../hooks/useAuth";
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     login,
@@ -30,20 +34,25 @@ function Login() {
   const [password, setPassword] =
     useState("");
 
+  const from =
+    location.state?.from?.pathname
+      ? `${location.state.from.pathname}${location.state.from.search || ""}${location.state.from.hash || ""}`
+      : "/app/market";
+
   useEffect(() => {
     if (
       isInitialized &&
       isAuthenticated
     ) {
-      navigate(
-        "/app/market",
-        { replace: true },
-      );
+      navigate(from, {
+        replace: true,
+      });
     }
   }, [
     isInitialized,
     isAuthenticated,
     navigate,
+    from,
   ]);
 
   function handleSubmit(event) {
@@ -60,10 +69,9 @@ function Login() {
         onSuccess: (user) => {
           login(user);
 
-          navigate(
-            "/app/market",
-            { replace: true },
-          );
+          navigate(from, {
+            replace: true,
+          });
         },
       },
     );
@@ -73,9 +81,7 @@ function Login() {
     <main>
       <h1>Login</h1>
 
-      <form
-        onSubmit={handleSubmit}
-      >
+      <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">
             Email
@@ -86,9 +92,7 @@ function Login() {
             type="email"
             value={email}
             onChange={(event) =>
-              setEmail(
-                event.target.value,
-              )
+              setEmail(event.target.value)
             }
             placeholder="Enter your email"
             required
@@ -106,9 +110,7 @@ function Login() {
             type="password"
             value={password}
             onChange={(event) =>
-              setPassword(
-                event.target.value,
-              )
+              setPassword(event.target.value)
             }
             placeholder="Enter your password"
             required
@@ -126,9 +128,7 @@ function Login() {
         </button>
 
         {error && (
-          <p
-            role="alert"
-          >
+          <p role="alert">
             {error.message}
           </p>
         )}
