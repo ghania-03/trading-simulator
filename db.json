@@ -115,6 +115,26 @@
       "total": 650.2517504897204,
       "timestamp": "2026-09-02T09:22:21.350Z",
       "userId": "user-1"
+    },
+    {
+      "id": "nRAvuZq_B68",
+      "type": "SELL",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 64884.863080797906,
+      "total": 648.848630807979,
+      "timestamp": "2026-09-02T09:32:20.809Z",
+      "userId": "user-1"
+    },
+    {
+      "id": "0Yg7xW3R6gs",
+      "type": "BUY",
+      "assetId": "btc",
+      "quantity": 0.1,
+      "price": 65082.78957005439,
+      "total": 6508.278957005439,
+      "timestamp": "2026-09-02T09:32:36.241Z",
+      "userId": "user-1"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

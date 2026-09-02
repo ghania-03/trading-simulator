@@ -1,5 +1,6 @@
 import {
   useContext,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -16,6 +17,10 @@ import AuthContext from "../context/AuthContext";
 import {
   createTransaction,
 } from "../services/transactionService";
+
+import { useNotifications } from "../context/NotificationContext";
+import PriceAlertControls from "../components/PriceAlertControls";
+
 
 function AssetDetail() {
   const { id } = useParams();
@@ -36,6 +41,19 @@ function AssetDetail() {
     error: assetError,
     refetch,
   } = useAsset(id);
+
+  const { success, error: showNotification } =
+  useNotifications();
+
+  const error = usePortfolioStore(
+    (state) => state.error,
+  );
+
+  useEffect(() => {
+  if (error) {
+    showNotification(error);
+  }
+}, [error, showNotification]);
 
   const { prices } = usePriceFeed();
 
@@ -69,9 +87,7 @@ const [isSubmitting, setIsSubmitting] =
     (state) => state.sell,
   );
 
-  const error = usePortfolioStore(
-    (state) => state.error,
-  );
+  
 
   const clearError =
     usePortfolioStore(
@@ -169,7 +185,7 @@ const [isSubmitting, setIsSubmitting] =
     );
   }
 
-  async function handleBuy() {
+async function handleBuy() {
   if (
     submittingRef.current ||
     !user
@@ -198,9 +214,17 @@ const [isSubmitting, setIsSubmitting] =
       });
 
       setQuantity("");
+
+      success(
+        `Bought ${numericQuantity} ${asset.symbol} for $${result.transaction.total.toFixed(2)}.`,
+      );
     } catch (syncError) {
       rollbackTransaction(
         result.transaction.id,
+      );
+
+      showNotification(
+        "Trade could not be saved. Your BUY was reverted.",
       );
 
       console.error(
@@ -214,7 +238,7 @@ const [isSubmitting, setIsSubmitting] =
   }
 }
 
-  async function handleSell() {
+async function handleSell() {
   if (
     submittingRef.current ||
     !user
@@ -243,9 +267,17 @@ const [isSubmitting, setIsSubmitting] =
       });
 
       setQuantity("");
+
+      success(
+        `Sold ${numericQuantity} ${asset.symbol} for $${result.transaction.total.toFixed(2)}.`,
+      );
     } catch (syncError) {
       rollbackTransaction(
         result.transaction.id,
+      );
+
+      showNotification(
+        "Trade could not be saved. Your SELL was reverted.",
       );
 
       console.error(
@@ -297,6 +329,10 @@ const [isSubmitting, setIsSubmitting] =
       <PriceChart
         history={priceData.history}
       />
+
+      <hr />
+
+      <PriceAlertControls asset={asset} />
 
       <hr />
 
