@@ -11,6 +11,8 @@ import {
 import AuthContext from "../context/AuthContext";
 import useAuth from "../hooks/useAuth";
 
+import ThemeToggle from "../components/ThemeToggle";
+
 function Login() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -74,6 +76,11 @@ function Login() {
   return (
     <main className="flex min-h-[calc(100vh-73px)] items-center justify-center px-4 py-10 sm:px-6">
       <div className="w-full max-w-md">
+        {/* Theme Toggle */}
+        <div className="mb-6 flex justify-end">
+          <ThemeToggle />
+        </div>
+
         {/* Brand / Intro */}
         <div className="mb-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-lg dark:bg-white dark:text-slate-900">
