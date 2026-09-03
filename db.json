@@ -1,0 +1,102 @@
+{
+  "assets": [
+    {
+      "id": "btc",
+      "symbol": "BTC",
+      "name": "Bitcoin",
+      "price": 65000,
+      "volatility": 130
+    },
+    {
+      "id": "eth",
+      "symbol": "ETH",
+      "name": "Ethereum",
+      "price": 3200,
+      "volatility": 6.4
+    },
+    {
+      "id": "sol",
+      "symbol": "SOL",
+      "name": "Solana",
+      "price": 180,
+      "volatility": 0.36
+    },
+    {
+      "id": "bnb",
+      "symbol": "BNB",
+      "name": "BNB",
+      "price": 600,
+      "volatility": 1.2
+    },
+    {
+      "id": "xrp",
+      "symbol": "XRP",
+      "name": "XRP",
+      "price": 0.6,
+      "volatility": 0.002
+    },
+    {
+      "id": "ada",
+      "symbol": "ADA",
+      "name": "Cardano",
+      "price": 0.4,
+      "volatility": 0.002
+    },
+    {
+      "id": "doge",
+      "symbol": "DOGE",
+      "name": "Dogecoin",
+      "price": 0.12,
+      "volatility": 0.001
+    },
+    {
+      "id": "avax",
+      "symbol": "AVAX",
+      "name": "Avalanche",
+      "price": 25,
+      "volatility": 0.05
+    }
+  ],
+  "users": [
+    {
+      "id": "1",
+      "name": "Ghania Iman",
+      "email": "ghania@example.com",
+      "password": "password123"
+    },
+    {
+      "id": "2",
+      "name": "Ali Khan",
+      "email": "ali@example.com",
+      "password": "password123"
+    },
+    {
+      "id": "3",
+      "name": "Sara Ahmed",
+      "email": "sara@example.com",
+      "password": "password123"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "9g8BNx3nNAY",
+      "userId": "2",
+      "type": "BUY",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65109.73560204823,
+      "total": 651.0973560204824,
+      "timestamp": "2026-09-02T18:03:19.682Z"
+    },
+    {
+      "id": "4TFTKigwtvY",
+      "userId": "2",
+      "type": "SELL",
+      "assetId": "btc",
+      "quantity": 0.01,
+      "price": 65581.73766839781,
+      "total": 655.8173766839781,
+      "timestamp": "2026-09-02T18:04:44.867Z"
+    }
+  ]
+}
