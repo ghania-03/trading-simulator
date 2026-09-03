@@ -26,9 +26,10 @@ function NotificationContainer() {
           role="alert"
           style={{
             padding: "14px 16px",
-            border: "1px solid #ccc",
+            border: "1px solid #cbd5e1",
             borderRadius: "8px",
             backgroundColor: "#fff",
+            color: "#0f172a",
             boxShadow:
               "0 4px 12px rgba(0, 0, 0, 0.15)",
             display: "flex",
@@ -49,6 +50,7 @@ function NotificationContainer() {
             <p
               style={{
                 margin: "4px 0 0",
+                color: "#334155",
               }}
             >
               {notification.message}
@@ -58,11 +60,18 @@ function NotificationContainer() {
           <button
             type="button"
             onClick={() =>
-              removeNotification(
-                notification.id,
-              )
+              removeNotification(notification.id)
             }
             aria-label="Close notification"
+            style={{
+              border: "none",
+              background: "transparent",
+              color: "#475569",
+              fontSize: "20px",
+              lineHeight: 1,
+              cursor: "pointer",
+              padding: "0",
+            }}
           >
             ×
           </button>
